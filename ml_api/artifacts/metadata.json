@@ -1,0 +1,25 @@
+{
+  "target": "price_per_kg",
+  "numeric_features": [
+    "rainfall_mm",
+    "temperature_c",
+    "demand_index"
+  ],
+  "categorical_features": [
+    "crop",
+    "soil_type",
+    "season"
+  ],
+  "n_samples": 2000,
+  "random_state": 123,
+  "cv_rmse": 2.221310558372547,
+  "test_rmse": 2.3461738827716165,
+  "test_mae": 1.8989714918014051,
+  "test_r2": 0.9635032726786327,
+  "best_params": {
+    "estimator__n_estimators": 200,
+    "estimator__min_samples_split": 10,
+    "estimator__min_samples_leaf": 2,
+    "estimator__max_depth": 16
+  }
+}

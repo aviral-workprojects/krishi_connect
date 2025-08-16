@@ -1,0 +1,18 @@
+Training report
+================
+
+Number of samples: 2000
+Train/test split: 0.80/0.20
+
+CV RMSE (train): 2.2213
+Test RMSE: 2.3462
+Test MAE: 1.8990
+Test R2: 0.9635
+
+Best params:
+{
+  "estimator__n_estimators": 200,
+  "estimator__min_samples_split": 10,
+  "estimator__min_samples_leaf": 2,
+  "estimator__max_depth": 16
+}
