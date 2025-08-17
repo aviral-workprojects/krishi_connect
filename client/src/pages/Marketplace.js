@@ -1,83 +1,130 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { getMarketTrends } from "../services/mlService";
+import React, { useEffect, useState } from "react";
+import api from "../api";
 
 export default function Marketplace() {
   const [crops, setCrops] = useState([]);
-  const [filters, setFilters] = useState({ q:'', location:'', minPrice:'', maxPrice:'' });
-  const [trends, setTrends] = useState(null);
-  const navigate = useNavigate();
+  const [filters, setFilters] = useState({
+    q: "",
+    location: "",
+    minPrice: "",
+    maxPrice: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Fetch crops from backend
+  // ✅ Fetch crops (with filters)
   const fetchCrops = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const params = new URLSearchParams(filters).toString();
-      const res = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/buyers/crops?${params}`);
+      const res = await api.get("/api/buyers/crops", {
+        params: {
+          q: filters.q || undefined,
+          location: filters.location || undefined,
+          minPrice: filters.minPrice || undefined,
+          maxPrice: filters.maxPrice || undefined,
+        },
+      });
       setCrops(res.data);
     } catch (err) {
       console.error("Error fetching crops:", err);
-    }
-  };
-
-  // Fetch ML-powered market trends
-  const fetchTrends = async () => {
-    try {
-      const data = await getMarketTrends();
-      setTrends(data);
-    } catch (err) {
-      console.error("Error fetching trends:", err);
+      setError("Failed to load crops.");
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchCrops();
-    fetchTrends();
+    // eslint-disable-next-line
   }, []);
 
+  const handleChange = (e) => {
+    setFilters({ ...filters, [e.target.name]: e.target.value });
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    fetchCrops();
+  };
+
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Marketplace</h1>
+    <div className="max-w-5xl mx-auto mt-6">
+      <h2 className="text-2xl font-bold mb-4">🛒 Marketplace</h2>
 
-      {/* ML Market Trends Section */}
-      {trends && (
-        <div className="bg-blue-100 p-4 rounded shadow">
-          <h3 className="font-semibold mb-2">Predicted Market Trends:</h3>
-          <pre className="text-sm">{JSON.stringify(trends, null, 2)}</pre>
-        </div>
+      {/* Search & Filters */}
+      <form
+        onSubmit={handleSearch}
+        className="bg-white shadow p-4 rounded mb-6 grid grid-cols-1 md:grid-cols-4 gap-3"
+      >
+        <input
+          type="text"
+          name="q"
+          placeholder="Search crop..."
+          value={filters.q}
+          onChange={handleChange}
+          className="border p-2 rounded w-full"
+        />
+        <input
+          type="text"
+          name="location"
+          placeholder="Location"
+          value={filters.location}
+          onChange={handleChange}
+          className="border p-2 rounded w-full"
+        />
+        <input
+          type="number"
+          name="minPrice"
+          placeholder="Min Price"
+          value={filters.minPrice}
+          onChange={handleChange}
+          className="border p-2 rounded w-full"
+        />
+        <input
+          type="number"
+          name="maxPrice"
+          placeholder="Max Price"
+          value={filters.maxPrice}
+          onChange={handleChange}
+          className="border p-2 rounded w-full"
+        />
+        <button
+          type="submit"
+          className="md:col-span-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+        >
+          🔍 Search
+        </button>
+      </form>
+
+      {/* Loading */}
+      {loading && <p className="text-gray-500">Loading crops...</p>}
+
+      {/* Error */}
+      {error && <p className="text-red-600">{error}</p>}
+
+      {/* Crops List */}
+      {crops.length === 0 && !loading ? (
+        <p className="text-gray-600">No crops found.</p>
+      ) : (
+        <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {crops.map((crop) => (
+            <li key={crop.id} className="bg-white shadow p-4 rounded">
+              <h3 className="font-semibold text-lg">{crop.name}</h3>
+              <p className="text-sm text-gray-600">
+                {crop.quantityKg} kg available
+              </p>
+              <p className="text-green-700 font-bold">
+                ₹{crop.pricePerKg}/kg
+              </p>
+              <p className="text-gray-500 text-sm">{crop.location}</p>
+              <p className="text-gray-500 text-xs">
+                Farmer: {crop.farmer?.name || "Unknown"}
+              </p>
+            </li>
+          ))}
+        </ul>
       )}
-
-      {/* Filters */}
-      <div className="flex gap-2 mb-4 flex-wrap">
-        <input placeholder="Search crop" value={filters.q}
-               onChange={e=>setFilters({...filters,q:e.target.value})}
-               className="border p-2"/>
-        <input placeholder="Location" value={filters.location}
-               onChange={e=>setFilters({...filters,location:e.target.value})}
-               className="border p-2"/>
-        <input placeholder="Min Price" value={filters.minPrice}
-               onChange={e=>setFilters({...filters,minPrice:e.target.value})}
-               className="border p-2"/>
-        <input placeholder="Max Price" value={filters.maxPrice}
-               onChange={e=>setFilters({...filters,maxPrice:e.target.value})}
-               className="border p-2"/>
-        <button onClick={fetchCrops}
-                className="bg-green-600 text-white px-4 rounded">Filter</button>
-      </div>
-
-      {/* Crop Listings */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {crops.map(c=>(
-          <div key={c.id} className="border p-4 rounded shadow bg-white">
-            <h3 className="font-bold">{c.name}</h3>
-            <p>{c.quantityKg} kg @ ₹{c.pricePerKg}/kg</p>
-            <p>Farmer: {c.farmer?.name}</p>
-            <p>Location: {c.location}</p>
-            <button onClick={()=>navigate("/checkout",{state:{crop:c}})}
-              className="mt-2 bg-green-700 text-white px-3 py-1 rounded">Buy</button>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

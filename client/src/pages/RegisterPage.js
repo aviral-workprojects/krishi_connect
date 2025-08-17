@@ -1,43 +1,87 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../api";
 
 export default function RegisterPage() {
-  const { t } = useTranslation();
-  const [form, setForm] = useState({ name:'', email:'', password:'', role:'buyer' });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "buyer", // default role
+  });
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+    setLoading(true);
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/auth/register`, form);
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
-      if (res.data.user.role === 'farmer') navigate('/farmer/dashboard');
-      else navigate('/');
+      const res = await api.post("/api/auth/register", form);
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      navigate("/"); // redirect to marketplace
     } catch (err) {
-      alert(err.response?.data?.error || 'Register failed');
+      setError(err.response?.data?.error || "Registration failed");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center h-screen">
-      <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-xl p-6 w-96">
-        <h2 className="text-xl font-bold mb-4">{t('register')}</h2>
-        <input type="text" placeholder="Name" className="border p-2 mb-2 w-full"
-               value={form.name} onChange={e => setForm({...form, name:e.target.value})} />
-        <input type="email" placeholder="Email" className="border p-2 mb-2 w-full"
-               value={form.email} onChange={e => setForm({...form, email:e.target.value})} />
-        <input type="password" placeholder="Password" className="border p-2 mb-2 w-full"
-               value={form.password} onChange={e => setForm({...form, password:e.target.value})} />
-        <select className="border p-2 mb-2 w-full"
-                value={form.role} onChange={e => setForm({...form, role:e.target.value})}>
+    <div className="max-w-md mx-auto mt-10 bg-white p-6 shadow rounded">
+      <h2 className="text-xl font-bold mb-4">📝 Register</h2>
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <input
+          type="text"
+          name="name"
+          placeholder="Full Name"
+          value={form.name}
+          onChange={handleChange}
+          className="border p-2 w-full rounded"
+          required
+        />
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={handleChange}
+          className="border p-2 w-full rounded"
+          required
+        />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={handleChange}
+          className="border p-2 w-full rounded"
+          required
+        />
+        <select
+          name="role"
+          value={form.role}
+          onChange={handleChange}
+          className="border p-2 w-full rounded"
+        >
           <option value="buyer">Buyer</option>
           <option value="farmer">Farmer</option>
         </select>
-        <button type="submit" className="bg-green-600 text-white w-full py-2 rounded">{t('register')}</button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full"
+        >
+          {loading ? "Registering..." : "Register"}
+        </button>
       </form>
+      {error && <p className="text-red-600 mt-3">{error}</p>}
     </div>
   );
 }
