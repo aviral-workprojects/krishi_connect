@@ -26,5 +26,8 @@ app.use((err, req, res, next) => {
   const status = err.status || 500;
   res.status(status).json({ error: err.message || 'Internal Server Error' });
 });
+app.get('/', (req, res) => {
+  res.send('🌾 Welcome to Krishi Connect API! Server is running.');
+});
 
 module.exports = app;
