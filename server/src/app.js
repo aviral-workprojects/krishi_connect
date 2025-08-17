@@ -1,10 +1,10 @@
 const express = require('express');
 const cors = require('cors');
-const routesAuth = require('./src/routes/auth.routes');
-const routesFarmer = require('./src/routes/farmer.routes');
-const routesBuyer = require('./src/routes/buyer.routes');
-const routesOrder = require('./src/routes/order.routes');
-const mlRoutes = require("./src/routes/mlRoutes");
+const routesAuth = require('./routes/auth.routes');
+const routesFarmer = require('./routes/farmer.routes');
+const routesBuyer = require('./routes/buyer.routes');
+const routesOrder = require('./routes/order.routes');
+const mlRoutes = require("./routes/mlRoutes");
 require('dotenv').config();
 
 const app = express();
