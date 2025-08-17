@@ -1,18 +1,31 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const { Sequelize, DataTypes } = require('sequelize'); // ✅ import DataTypes
-const configAll = require('../config/db');
+const { Sequelize, DataTypes } = require('sequelize');
 require('dotenv').config();
 
-const env = process.env.NODE_ENV || 'development';
-const config = configAll[env];
 let sequelize;
 
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
+if (process.env.DATABASE_URL) {
+  // Render / production (single DATABASE_URL)
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: 'postgres',
+    protocol: 'postgres',
+    logging: false,
+  });
 } else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
+  // Local dev (individual DB_* env vars)
+  sequelize = new Sequelize(
+    process.env.DB_NAME,
+    process.env.DB_USER,
+    process.env.DB_PASS,
+    {
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT,
+      dialect: 'postgres',
+      logging: false,
+    }
+  );
 }
 
 const db = {};
@@ -21,7 +34,6 @@ const basename = path.basename(__filename);
 fs.readdirSync(__dirname)
   .filter(file => file !== basename && file.endsWith('.js'))
   .forEach(file => {
-    // ✅ now pass DataTypes into each model
     const model = require(path.join(__dirname, file))(sequelize, DataTypes);
     db[model.name] = model;
   });
