@@ -16,6 +16,11 @@ module.exports = (sequelize) => {
         if (user.passwordHash && !user.passwordHash.startsWith('$2')) {
           user.passwordHash = await bcrypt.hash(user.passwordHash, 10);
         }
+      },
+      beforeUpdate: async (user) => {
+        if (user.changed('passwordHash') && !user.passwordHash.startsWith('$2')) {
+          user.passwordHash = await bcrypt.hash(user.passwordHash, 10);
+        }
       }
     }
   });

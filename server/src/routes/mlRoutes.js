@@ -9,4 +9,3 @@ router.post("/recommend", mlController.getCropRecommendation);
 router.get("/trends", mlController.getMarketTrends);
 
 module.exports = router;
-

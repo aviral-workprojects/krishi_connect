@@ -1,16 +1,34 @@
 const axios = require("axios");
 
-// Read ML service URL from .env (fallback to localhost for dev)
 const ML_API_URL = process.env.ML_API_URL || "http://localhost:5000";
 
+// Farmer requests crop recommendation (actually crop price prediction)
 exports.getCropRecommendation = async (req, res) => {
   try {
-    const { soilType, season, rainfall } = req.body;
-
-    const response = await axios.post(`${ML_API_URL}/recommend`, {
-      soilType,
+    const {
+      crop,
+      soil_type,
       season,
-      rainfall
+      rainfall_mm,
+      temperature_c,
+      demand_index
+    } = req.body;
+
+    // Validate input
+    if (!crop || !soil_type || !season || rainfall_mm === undefined || temperature_c === undefined || demand_index === undefined) {
+      return res.status(400).json({
+        error: "Missing required fields. Expected { crop, soil_type, season, rainfall_mm, temperature_c, demand_index }"
+      });
+    }
+
+    // Call ML API
+    const response = await axios.post(`${ML_API_URL}/recommend`, {
+      crop,
+      soil_type,
+      season,
+      rainfall_mm,
+      temperature_c,
+      demand_index
     });
 
     return res.json(response.data);
@@ -20,6 +38,7 @@ exports.getCropRecommendation = async (req, res) => {
   }
 };
 
+// Buyer sees predicted market trends
 exports.getMarketTrends = async (req, res) => {
   try {
     const response = await axios.get(`${ML_API_URL}/trends`);

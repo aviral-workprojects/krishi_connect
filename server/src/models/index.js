@@ -7,14 +7,14 @@ require('dotenv').config();
 let sequelize;
 
 if (process.env.DATABASE_URL) {
-  // Render / production (single DATABASE_URL)
+  // Render / production
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     protocol: 'postgres',
     logging: false,
   });
 } else {
-  // Local dev (individual DB_* env vars)
+  // Local dev
   sequelize = new Sequelize(
     process.env.DB_NAME,
     process.env.DB_USER,
@@ -52,13 +52,24 @@ if (User && Order) {
 }
 
 if (Order && Crop && OrderItem) {
-  Order.belongsToMany(Crop, { through: OrderItem, foreignKey: 'orderId', otherKey: 'cropId', as: 'items' });
-  Crop.belongsToMany(Order, { through: OrderItem, foreignKey: 'cropId', otherKey: 'orderId' });
+  Order.belongsToMany(Crop, {
+    through: OrderItem,
+    foreignKey: 'orderId',
+    otherKey: 'cropId',
+    as: 'items'
+  });
+  Crop.belongsToMany(Order, {
+    through: OrderItem,
+    foreignKey: 'cropId',
+    otherKey: 'orderId'
+  });
 
   Order.hasMany(OrderItem, { foreignKey: 'orderId', as: 'orderItems' });
   OrderItem.belongsTo(Order, { foreignKey: 'orderId' });
   OrderItem.belongsTo(Crop, { foreignKey: 'cropId' });
 }
+
+console.log("Loaded models:", Object.keys(db)); // debug
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
